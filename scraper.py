@@ -1,16 +1,13 @@
 """
 =============================================================================
-PROYECTO ACADÉMICO DE WEB SCRAPING — LINKEDIN JOBS
-MÓDULO DE ADRIÁN VELASCO: OBTENCIÓN Y EXTRACCIÓN DE OFERTAS
+PROYECTO DE WEB SCRAPING — LINKEDIN JOBS
+MÓDULO: OBTENCIÓN Y EXTRACCIÓN DE OFERTAS
 =============================================================================
-
-Responsabilidad de Adrián:
-  1. OBTENCIÓN: Simular identidad humana (cabeceras, User-Agent, pausas) y
-     realizar la petición HTTP a la fuente web (o cargar archivo de respaldo).
-  2. PARSEO Y SELECTORES: Analizar el árbol DOM con BeautifulSoup.
-  3. EXTRACCIÓN: Localizar tarjetas laborales y extraer campos estructurados.
-  4. ENTREGA: Producir una lista de ofertas limpias para el módulo de Fanny
-     (limpieza, normalización y filtros).
+Flujo del módulo:
+  1. OBTENCIÓN: Configuración de cabeceras, pausas y peticiones HTTP seguras.
+  2. PARSEO: Análisis del árbol DOM con BeautifulSoup.
+  3. EXTRACCIÓN: Localización de tarjetas de empleo y extracción de campos estructurados.
+  4. EXPORTACIÓN: Generación de dataset estructurado en formato JSON.
 =============================================================================
 """
 
@@ -19,25 +16,42 @@ import logging
 import random
 import time
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
-# Configuración básica de logging para seguimiento claro durante la ejecución
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S",
 )
-logger = logging.getLogger("ScraperAdrian")
+logger = logging.getLogger("ScraperJobs")
 
-# URL objetivo en tiempo real (Empleos en España / LinkedIn público)
-URL_OBJETIVO_DEFAULT = (
-    "https://es.linkedin.com/jobs/search/"
-    "?lipi=urn%3Ali%3Apage%3Ad_homepage-guest-home_jsbeacon%3BNjGI0v8QTPm9uHLYtxyPbA%3D%3D"
-    "&position=1&pageNum=0"
-)
+
+# =============================================================================
+# 0. CONSTRUCTOR DE URL PARAMETRIZABLE
+# =============================================================================
+def construir_url_linkedin(ubicacion: str = "", palabras_clave: str = "") -> str:
+    """
+    Construye de forma dinámica la URL de búsqueda pública de LinkedIn Jobs.
+
+    Aplica codificación estándar de URLs (RFC 3986 mediante urllib.parse.urlencode)
+    para soportar de manera transparente espacios (ej. 'Nueva York' -> 'Nueva+York')
+    y caracteres con tildes (ej. 'Bogotá' -> 'Bogot%C3%A1').
+
+    Parámetros:
+      - ubicacion: Ciudad, región o país deseado (ej. 'Bogotá', 'Madrid', 'Medellín', 'Nueva York').
+      - palabras_clave: Opcional, rol o tecnología a buscar (ej. 'Python', 'Data Analyst').
+    """
+    base_url = "https://es.linkedin.com/jobs/search"
+    parametros: Dict[str, str] = {
+        "keywords": palabras_clave.strip() if palabras_clave else "",
+        "location": ubicacion.strip() if ubicacion else "",
+        "position": "1",
+        "pageNum": "0",
+    }
+    return f"{base_url}?{urlencode(parametros)}"
 
 
 # =============================================================================
@@ -105,15 +119,23 @@ def aplicar_pausa_humana(min_seg: float = 1.5, max_seg: float = 3.5) -> None:
 # =============================================================================
 # 3. OBTENCIÓN DEL HTML (RED O RESPALDO LOCAL)
 # =============================================================================
-def obtener_html_web(url: str = URL_OBJETIVO_DEFAULT, timeout: int = 15) -> str:
+def obtener_html_web(
+    url: Optional[str] = None,
+    ubicacion: Optional[str] = None,
+    timeout: int = 15,
+) -> str:
     """
     Realiza una petición HTTP GET segura a la URL en tiempo real.
+    Si no se especifica 'url', se genera dinámicamente a partir de 'ubicacion'.
 
     Manejo de Errores:
     - Valida código 200 OK.
     - Notifica explícitamente si ocurre un 429 (Too Many Requests) o 403 (Forbidden).
     - Captura excepciones de conexión o tiempo de espera.
     """
+    if not url:
+        url = construir_url_linkedin(ubicacion=ubicacion or "")
+
     aplicar_pausa_humana(1.0, 2.5)
     headers = obtener_cabeceras_navegador()
 
@@ -272,7 +294,7 @@ def extraer_ofertas(html: str) -> List[Dict[str, Any]]:
     Recibe una cadena HTML, analiza el DOM y devuelve una lista de diccionarios
     con cada una de las ofertas encontradas.
 
-    Estructura de salida entregada a Fanny:
+    Estructura de salida estándar:
     [
         {
             "id": "4484678657",
@@ -368,22 +390,29 @@ def mostrar_resumen_ofertas(ofertas: List[Dict[str, Any]], limite: int = 10) -> 
 
 def ejecutar_scraping(
     modo: str = "web",
-    url: str = URL_OBJETIVO_DEFAULT,
+    url: Optional[str] = None,
+    ubicacion: Optional[str] = None,
+    palabras_clave: str = "",
     ruta_archivo: str = "search.html",
     guardar_json: bool = True,
     archivo_salida: str = "ofertas_extraidas.json",
 ) -> List[Dict[str, Any]]:
     """
-    Función de orquestación principal del Módulo de Adrián.
+    Función de orquestación del scraper.
 
     Parámetros:
       - modo: 'web' para scraping en tiempo real, 'local' para search.html.
-      - url: Dirección web de LinkedIn Jobs a consultar.
+      - url: Dirección web de LinkedIn Jobs a consultar (opcional si se pasa 'ubicacion').
+      - ubicacion: Ciudad, región o país a consultar si no se pasa 'url'.
+      - palabras_clave: Término de búsqueda opcional (ej. 'Python', 'Analista').
       - ruta_archivo: Ruta al archivo local de respaldo.
-      - guardar_json: Si es True, almacena los resultados para que Fanny los use.
+      - guardar_json: Si es True, almacena los resultados en disco.
       - archivo_salida: Nombre del archivo JSON a generar.
     """
-    logger.info(f"Iniciando Módulo de Obtención y Extracción (Modo: '{modo}')")
+    if not url:
+        url = construir_url_linkedin(ubicacion=ubicacion or "", palabras_clave=palabras_clave)
+
+    logger.info(f"Iniciando Módulo de Obtención y Extracción (Modo: '{modo}', URL: {url})")
 
     if modo == "web":
         try:
@@ -394,21 +423,73 @@ def ejecutar_scraping(
     else:
         html = obtener_html_archivo(ruta_archivo=ruta_archivo)
 
-    # Extracción de ofertas
     ofertas = extraer_ofertas(html)
-
-    # Presentación
     mostrar_resumen_ofertas(ofertas)
 
-    # Guardar para entrega limpia a Fanny
     if guardar_json and ofertas:
         with open(archivo_salida, "w", encoding="utf-8") as f:
             json.dump(ofertas, f, ensure_ascii=False, indent=2)
-        logger.info(f"Datos estructurados guardados en '{archivo_salida}' para el Módulo de Fanny.")
+        logger.info(f"Datos estructurados guardados en '{archivo_salida}'.")
 
     return ofertas
 
 
+def scrapear_ofertas(
+    ubicacion: str = "Bogotá",
+    palabras_clave: str = "",
+    modo: str = "web",
+    guardar_json: bool = True,
+    archivo_salida: str = "ofertas_extraidas.json",
+    ruta_archivo: str = "search.html",
+) -> List[Dict[str, Any]]:
+    """
+    Punto de entrada principal y parametrizable del scraper.
+    Permite obtener y extraer ofertas de empleo para cualquier ubicación sin modificar el código interno.
+
+    Ejemplos de uso:
+      ofertas_bogota = scrapear_ofertas("Bogotá")
+      ofertas_madrid = scrapear_ofertas("Madrid")
+      ofertas_cali = scrapear_ofertas("Cali")
+      ofertas_ny = scrapear_ofertas("Nueva York", palabras_clave="Python")
+    """
+    return ejecutar_scraping(
+        modo=modo,
+        ubicacion=ubicacion,
+        palabras_clave=palabras_clave,
+        ruta_archivo=ruta_archivo,
+        guardar_json=guardar_json,
+        archivo_salida=archivo_salida,
+    )
+
+
 if __name__ == "__main__":
-    # Ejecución por defecto en tiempo real a la URL solicitada
-    ejecutar_scraping(modo="web")
+    import sys
+
+    if len(sys.argv) > 1:
+        # Modo por línea de comandos: python scraper.py "Ubicación" ["Trabajo"]
+        ubicacion_elegida = sys.argv[1].strip()
+        palabras_clave_elegidas = sys.argv[2].strip() if len(sys.argv) > 2 else ""
+        logger.info(f"Modo CLI — Ubicación: '{ubicacion_elegida}', Palabras clave: '{palabras_clave_elegidas}'")
+    else:
+        # Modo interactivo
+        print("\n" + "=" * 40)
+        print("       BUSCADOR DE OFERTAS DE EMPLEO")
+        print("========================================")
+        try:
+            while True:
+                entrada = input("\nIngrese la ubicación:\n> ").strip()
+                if entrada:
+                    ubicacion_elegida = entrada
+                    break
+                print("Aviso: La ubicación es obligatoria. Ingrese una ciudad, región o país.")
+
+            palabras_clave_elegidas = input("\nIngrese el trabajo o palabra clave:\n> ").strip()
+
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperación cancelada por el usuario.")
+            sys.exit(0)
+
+    print("\nBuscando ofertas de empleo...")
+    print(f"\nUbicación: {ubicacion_elegida}")
+    print(f"Trabajo/palabra clave: {palabras_clave_elegidas if palabras_clave_elegidas else '(todas las ofertas)'}\n")
+    scrapear_ofertas(ubicacion=ubicacion_elegida, palabras_clave=palabras_clave_elegidas, modo="web")

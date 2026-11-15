@@ -14,3 +14,6 @@ env/
 
 # Logs y temporales
 *.log
+
+# Archivo de salida generado en tiempo de ejecución
+ofertas_extraidas.json
