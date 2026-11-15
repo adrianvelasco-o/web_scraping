@@ -203,10 +203,5 @@ Otras palabras, sobre las mismas 53 ofertas:
 5. **Ubicación por texto.** "Soacha, Cundinamarca" no se cuenta como Bogotá aunque pertenezca a su área; el filtro no conoce geografía.
 6. **Una sola página de resultados** (60 ofertas): los conteos describen esa muestra, no todo el mercado laboral.
 
--
-
-
-* Python Software Foundation. (s. f.-d). *urllib.parse — Parse URLs into components*. https://docs.python.org/3/library/urllib.parse.html
-* Python Software Foundation. (s. f.-e). *unittest — Unit testing framework*. https://docs.python.org/3/library/unittest.html
 * Rahm, E. y Do, H. H. (2000). Data Cleaning: Problems and Current Approaches. *IEEE Data Engineering Bulletin, 23*(4), 3–13.
 * Unicode Consortium. (2024). *Unicode Standard Annex #15: Unicode Normalization Forms*. https://unicode.org/reports/tr15/
