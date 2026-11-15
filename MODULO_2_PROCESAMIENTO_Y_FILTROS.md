@@ -1,18 +1,9 @@
 # MÓDULO 2 — PROCESAMIENTO Y FILTRADO DE OFERTAS
 
-**Estudiante responsable:** Fanny
+
 **Módulo:** Limpieza + normalización + filtros
 **Archivos:** `procesador.py`, `filtros.py`, `test_procesador.py`, `test_filtros.py`
 
-Este documento cubre la parte del Módulo 2 dentro del proyecto: investigación, explicación del código, pruebas, resultados y guion de exposición.
-
-```text
-Módulo 1 (Adrián)            Módulo 2 (Fanny)                        Módulo 3 (Camilo)
-scraper.extraer_ofertas() →  procesar_ofertas() → filtrar_*() / contar_*()  →  resultados y análisis
-   lista de diccionarios        lista limpia         sublistas y conteos
-```
-
----
 
 ## 1. Investigación
 
@@ -212,39 +203,9 @@ Otras palabras, sobre las mismas 53 ofertas:
 5. **Ubicación por texto.** "Soacha, Cundinamarca" no se cuenta como Bogotá aunque pertenezca a su área; el filtro no conoce geografía.
 6. **Una sola página de resultados** (60 ofertas): los conteos describen esa muestra, no todo el mercado laboral.
 
----
+-
 
-## 6. Guion de exposición (5–7 minutos)
 
-| # | Diapositiva | Idea principal | Tiempo |
-| :-- | :--- | :--- | :-- |
-| 1 | Procesamiento | Recibo 60 ofertas crudas del scraper; las preparo en tres pasos. | 1 min |
-| 2 | Limpieza | Corregir sin cambiar el significado: espacios, URL, vacíos → `None`. | 1 min |
-| 3 | Normalización | "BOGOTÁ", "Bogotá", "bogota" → `bogota`. Explicar `normalizar_texto`. | 1,5 min |
-| 4 | Filtros | Una sola función base, `coincide_palabra`. Modos "alguna" y "todas". | 1,5 min |
-| 5 | Ejemplo práctico | 60 → 53 en Bogotá; por qué "Ingeniero" da 0 y "Engineer" 6. | 1 min |
-| 6 | Pruebas y limitaciones | 57 pruebas; solo título; subcadena. | 1 min |
-
-Demostración en vivo sugerida: `python filtros.py "Bogotá" Engineer Data Comercial`.
-
-Preguntas probables del docente:
-
-* **¿Por qué "Ingeniero" da cero?** Porque el listado solo trae títulos y los de ingeniería están en inglés. El filtro funciona: con "Engineer" encuentra 6.
-* **¿Qué diferencia hay entre limpiar y normalizar?** Limpiar corrige el dato que se muestra; normalizar crea una versión solo para comparar.
-* **¿Qué pasa si una oferta no tiene ubicación?** Queda en `None`; al filtrar por ubicación no coincide y el programa no falla.
-* **¿Cómo se quitan las tildes?** Se descompone la letra con Unicode NFD y se descartan las marcas (categoría `Mn`).
-* **¿Por qué no usar Pandas?** Para 60 registros, listas y diccionarios son suficientes y más fáciles de explicar; el scraper ya entrega esa estructura.
-* **¿Qué diferencia hay entre el filtro del scraper y este?** El scraper envía la palabra a LinkedIn (búsqueda del servidor); este módulo filtra localmente los datos ya extraídos.
-
----
-
-## 7. Referencias
-
-* Manning, C. D., Raghavan, P. y Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. Cap. 2: «The term vocabulary and postings lists». https://nlp.stanford.edu/IR-book/
-* Mitchell, R. (2024). *Web Scraping with Python: Data Extraction from the Modern Web* (3.ª ed.). O'Reilly Media.
-* Python Software Foundation. (s. f.-a). *Built-in Types — str.casefold*. https://docs.python.org/3/library/stdtypes.html#str.casefold
-* Python Software Foundation. (s. f.-b). *unicodedata — Unicode Database*. https://docs.python.org/3/library/unicodedata.html
-* Python Software Foundation. (s. f.-c). *re — Regular expression operations*. https://docs.python.org/3/library/re.html
 * Python Software Foundation. (s. f.-d). *urllib.parse — Parse URLs into components*. https://docs.python.org/3/library/urllib.parse.html
 * Python Software Foundation. (s. f.-e). *unittest — Unit testing framework*. https://docs.python.org/3/library/unittest.html
 * Rahm, E. y Do, H. H. (2000). Data Cleaning: Problems and Current Approaches. *IEEE Data Engineering Bulletin, 23*(4), 3–13.
